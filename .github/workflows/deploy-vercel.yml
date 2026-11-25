@@ -31,6 +31,16 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Install Vercel CLI
         run: npm install --global vercel@41.7.3
+      - name: Set supported Node.js version on the existing Vercel project
+        run: |
+          set -euo pipefail
+          curl --silent --show-error --fail-with-body \
+            -X PATCH \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data '{"nodeVersion":"22.x"}' \
+            "https://api.vercel.com/v9/projects/${VERCEL_PROJECT_ID}?teamId=${VERCEL_ORG_ID}" \
+            | jq -r '"Vercel project Node.js version: " + .nodeVersion'
       - name: Link existing Vercel project and pull production settings
         run: vercel --token "$VERCEL_TOKEN" --scope mujahid25 pull --yes --environment=production
       - name: Build production output

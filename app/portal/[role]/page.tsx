@@ -42,6 +42,10 @@ export default function PortalPage({ params }: { params: { role: string } }) {
   const [jobs, setJobs] = useState<AnyRow[]>([]);
   const [profiles, setProfiles] = useState<AnyRow[]>([]);
   const [storeId, setStoreId] = useState("");
+  const [storeFee, setStoreFee] = useState("0");
+  const [storeMinimum, setStoreMinimum] = useState("0");
+  const [storePrep, setStorePrep] = useState("25");
+  const [storeStatus, setStoreStatus] = useState("open");
   const [online, setOnline] = useState(false);
   const [tab, setTab] = useState("overview");
   const [search, setSearch] = useState("");
@@ -102,6 +106,10 @@ export default function PortalPage({ params }: { params: { role: string } }) {
         const selectedStore = (s.data || []).find((x: AnyRow) => x.id === storeId) || s.data?.[0];
         if (selectedStore) {
           setStoreId(selectedStore.id);
+          setStoreFee(String(selectedStore.delivery_fee_sar || 0));
+          setStoreMinimum(String(selectedStore.minimum_order_sar || 0));
+          setStorePrep(String(selectedStore.prep_time_minutes || 25));
+          setStoreStatus(selectedStore.status || "open");
           const [o, p] = await Promise.all([
             db.from("orders").select("*,order_items(*)").eq("store_id", selectedStore.id).order("created_at", { ascending: false }).limit(50),
             db.from("products").select("*").eq("store_id", selectedStore.id).order("created_at", { ascending: false })
@@ -182,6 +190,19 @@ export default function PortalPage({ params }: { params: { role: string } }) {
   async function signOut() {
     await db?.auth.signOut();
     setUser(null); setProfile(null); setStores([]); setOrders([]);
+  }
+
+  async function saveStoreSettings(e: FormEvent) {
+    e.preventDefault();
+    if (!db || !storeId) return;
+    setBusy(true); setError("");
+    const result = await db.from("stores").update({
+      delivery_fee_sar: Number(storeFee), minimum_order_sar: Number(storeMinimum),
+      prep_time_minutes: Number(storePrep), status: storeStatus
+    }).eq("id", storeId).select().single();
+    setBusy(false);
+    if (result.error) setError(result.error.message);
+    else setStores(old => old.map(s => s.id === storeId ? result.data : s));
   }
 
   async function addProduct(e: FormEvent) {
@@ -308,6 +329,13 @@ export default function PortalPage({ params }: { params: { role: string } }) {
         {stores.length > 1 && <div className="panel"><label>المتجر الحالي</label><select value={storeId} onChange={e => setStoreId(e.target.value)}>{stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>}
         {stores.length === 0 ? <section className="panel"><h2>لا يوجد متجر مرتبط بحسابك</h2><p>تم تسجيل حسابك كتاجر، لكن لا يوجد متجر مفعّل بعد. تواصل مع إدارة المنصة لإضافته.</p></section> : <>
           <div className="statsGrid"><article><StoreIcon/><small>المتاجر</small><b>{stores.length}</b></article><article><Package/><small>الطلبات</small><b>{orders.length}</b></article><article><CheckCircle/><small>المنتجات</small><b>{products.length}</b></article></div>
+          <section className="panel"><h2>إعدادات المتجر</h2><form className="storeSettingsForm" onSubmit={saveStoreSettings}>
+            <div><label>رسوم التوصيل (ر.س)</label><input type="number" min="0" step="0.5" value={storeFee} onChange={e=>setStoreFee(e.target.value)}/></div>
+            <div><label>الحد الأدنى للطلب (ر.س)</label><input type="number" min="0" step="1" value={storeMinimum} onChange={e=>setStoreMinimum(e.target.value)}/></div>
+            <div><label>وقت التحضير (دقيقة)</label><input type="number" min="0" max="240" value={storePrep} onChange={e=>setStorePrep(e.target.value)}/></div>
+            <div><label>حالة المتجر</label><select value={storeStatus} onChange={e=>setStoreStatus(e.target.value)}><option value="open">مفتوح لاستقبال الطلبات</option><option value="busy">مشغول</option><option value="closed">مغلق مؤقتاً</option></select></div>
+            <button className="primary" disabled={busy}>حفظ إعدادات المتجر</button>
+          </form></section>
           <section className="panel"><h2>طلبات المتجر</h2>{orders.length === 0 ? <p>لا توجد طلبات حالياً.</p> : orders.map(o => <div className="rowItem" key={o.id}>
             <div><b>طلب #{o.order_number}</b><small>{statusNames[o.status] || o.status} · {money(o.total_sar)} · {new Date(o.created_at).toLocaleString("ar-SA")}</small>{o.order_items?.map((i: AnyRow) => <small key={i.id}>{i.product_name} × {i.quantity}</small>)}</div>
             {merchantNext[o.status]?.length ? <select disabled={busy} value="" onChange={e => e.target.value && setOrderStatus(o.id, e.target.value)}><option value="">تحديث الحالة</option>{merchantNext[o.status].map(s => <option key={s} value={s}>{statusNames[s]}</option>)}</select> : <span>{statusNames[o.status] || o.status}</span>}

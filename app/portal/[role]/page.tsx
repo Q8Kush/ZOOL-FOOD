@@ -73,11 +73,11 @@ export default function PortalPage({ params }: { params: { role: string } }) {
     }
     const client = createClient(url, key);
     setDb(client);
-    client.auth.getUser().then(({ data }) => {
+    client.auth.getUser().then(async ({ data }) => {
       if (data.user) {
         setUser(data.user);
-        void client.from("profiles").select("*").eq("id", data.user.id).single()
-          .then(({ data: p }) => setProfile(p));
+        const { data: p } = await client.from("profiles").select("*").eq("id", data.user.id).single();
+        setProfile(p);
       }
       setLoading(false);
     }).catch(() => setLoading(false));

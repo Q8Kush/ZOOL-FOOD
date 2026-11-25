@@ -149,7 +149,22 @@ export default function PortalPage({ params }: { params: { role: string } }) {
     if (db && user && profile?.role === role) void load();
   }, [db, user, profile?.role, role, load]);
 
-  async function signIn(e: FormEvent) {
+  useEffect(() => {
+    if (!db || !user || profile?.role !== role) return;
+    const channel = db.channel("operations-" + role + "-" + user.id);
+    if (role === "merchant" && storeId) {
+      channel.on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: "store_id=eq." + storeId }, () => { void load(); });
+    } else if (role === "courier") {
+      channel.on("postgres_changes", { event: "*", schema: "public", table: "deliveries", filter: "courier_id=eq." + user.id }, () => { void load(); });
+    } else if (role === "admin") {
+      channel.on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => { void load(); });
+      channel.on("postgres_changes", { event: "*", schema: "public", table: "stores" }, () => { void load(); });
+    }
+    channel.subscribe();
+    return () => { void db.removeChannel(channel); };
+  }, [db, user, profile?.role, role, storeId, load]);
+
+ async function signIn(e: FormEvent) {
     e.preventDefault();
     if (!db) return;
     setLoading(true); setError("");

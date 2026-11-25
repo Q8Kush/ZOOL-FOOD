@@ -1,4 +1,5 @@
 "use client";
+import "../portal.css";
 import {useEffect,useState,FormEvent} from "react";
 import {createClient,SupabaseClient} from "@supabase/supabase-js";
 import {Store,Package,Users,Truck,LogOut,RefreshCw,Plus,CheckCircle,Clock,MapPin,ShieldCheck} from "lucide-react";

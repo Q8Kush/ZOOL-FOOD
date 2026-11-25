@@ -32,14 +32,14 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global vercel@41.7.3
       - name: Link existing Vercel project and pull production settings
-        run: vercel --scope mujahid25 pull --yes --environment=production
+        run: vercel --token "$VERCEL_TOKEN" --scope mujahid25 pull --yes --environment=production
       - name: Build production output
-        run: vercel --scope mujahid25 build --prod
+        run: vercel --token "$VERCEL_TOKEN" --scope mujahid25 build --prod
       - name: Deploy production output
         id: deploy
         run: |
           set -euo pipefail
-          vercel --scope mujahid25 deploy --prebuilt --prod --yes | tee /tmp/vercel-deploy-output.txt
+          vercel --token "$VERCEL_TOKEN" --scope mujahid25 deploy --prebuilt --prod --yes | tee /tmp/vercel-deploy-output.txt
           DEPLOY_URL="$(grep -Eo 'https://[^[:space:]]+\.vercel\.app' /tmp/vercel-deploy-output.txt | tail -n 1)"
           if [ -z "$DEPLOY_URL" ]; then
             echo "Vercel CLI did not return a deployment URL."

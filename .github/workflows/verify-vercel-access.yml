@@ -13,13 +13,21 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - name: Install pinned Vercel CLI
-        run: npm install --global vercel@41.7.3
-      - name: Verify Vercel identity
-        run: vercel whoami
+      - name: Verify Vercel token and account
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      - name: Verify access to Mujahid team projects
-        run: vercel project ls --scope mujahid25
+        run: |
+          set -euo pipefail
+          curl --silent --show-error --fail-with-body \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}" \
+            https://api.vercel.com/v2/user \
+            | jq -r '"Authenticated Vercel account: " + (.username // .name // .id)'
+      - name: Verify access to the existing ZOOL-FOOD project
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -euo pipefail
+          curl --silent --show-error --fail-with-body \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}" \
+            "https://api.vercel.com/v9/projects/prj_s5uGIFX8DtI4A2pVr0Qf2zpIajlw?teamId=team_qYDCsn6nTYeqMRsgcEuPY3AE" \
+            | jq -r '"Project access confirmed: " + .name + " (" + .id + ")"'

@@ -1,0 +1,25 @@
+name: Verify Vercel Access
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-vercel-access.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install pinned Vercel CLI
+        run: npm install --global vercel@41.7.3
+      - name: Verify Vercel identity
+        run: vercel whoami
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      - name: Verify access to Mujahid team projects
+        run: vercel project ls --scope mujahid25
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}

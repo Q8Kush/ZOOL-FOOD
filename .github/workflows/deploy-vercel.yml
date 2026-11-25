@@ -30,7 +30,7 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Install Vercel CLI
-        run: npm install --global vercel@47.2.2
+        run: npm install --global vercel@66.6.0
       - name: Set supported Node.js version on the existing Vercel project
         run: |
           set -euo pipefail

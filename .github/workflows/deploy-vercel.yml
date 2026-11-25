@@ -31,6 +31,13 @@ jobs:
         id: deployment_check
         run: |
           set -euo pipefail
+          EARLIEST_RETRY=1795736701
+          NOW="$(date -u +%s)"
+          if [ "$NOW" -lt "$EARLIEST_RETRY" ]; then
+            echo "already_deployed=true" >> "$GITHUB_OUTPUT"
+            echo "Vercel's 24-hour deployment limit is still active; retry is scheduled after 2026-11-26 23:45 UTC."
+            exit 0
+          fi
           response="$(curl --silent --show-error --fail-with-body --max-time 20 \
             -H "Authorization: Bearer ${VERCEL_TOKEN}" \
             "https://api.vercel.com/v6/deployments?projectId=${VERCEL_PROJECT_ID}&teamId=${VERCEL_ORG_ID}&limit=20&target=production")"

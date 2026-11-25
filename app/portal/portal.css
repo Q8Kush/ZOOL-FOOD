@@ -31,3 +31,10 @@
  .searchBox,.searchBox input{width:100%}
  .rowActions button{padding:7px;font-size:9px}
 }
+
+.storeSettingsForm{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.storeSettingsForm>div{display:grid;gap:7px}
+.storeSettingsForm label{font-size:11px;color:#666;font-weight:700}
+.storeSettingsForm input,.storeSettingsForm select{width:100%;min-width:0;border:1px solid #e5e5e8;background:#fff;border-radius:9px;padding:11px 12px;font:inherit;font-size:12px}
+.storeSettingsForm button{grid-column:1/-1;justify-self:start}
+@media(max-width:650px){.storeSettingsForm{grid-template-columns:1fr}.storeSettingsForm button{grid-column:1}}

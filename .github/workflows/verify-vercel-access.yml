@@ -12,6 +12,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    container: node:20-bookworm
     env:
       VERCEL_ORG_ID: team_qYDCsn6nTYeqMRsgcEuPY3AE
       VERCEL_PROJECT_ID: prj_s5uGIFX8DtI4A2pVr0Qf2zpIajlw
@@ -20,10 +21,6 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
-      - name: Install Node.js
-        uses: actions/setup-node@1e60f620b9541d36d5a9c1f0b3b9f0f5d7c6f7a # v4.0.3
-        with:
-          node-version: 20
       - name: Install pinned Vercel CLI
         run: npm install --global vercel@41.7.3
       - name: Verify Vercel token and account

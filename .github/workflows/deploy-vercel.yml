@@ -26,11 +26,11 @@ jobs:
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Install Vercel CLI
-        run: npm install --global vercel@41.7.3
+        run: npm install --global vercel@47.2.2
       - name: Set supported Node.js version on the existing Vercel project
         run: |
           set -euo pipefail

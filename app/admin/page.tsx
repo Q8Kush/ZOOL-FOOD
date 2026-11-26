@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import "../account/account.css";
 import { createClient } from "@supabase/supabase-js";
 import { ShieldCheck, Store, Users, ShoppingBag, RefreshCw, LogOut, ArrowRight, Check, X } from "lucide-react";
 

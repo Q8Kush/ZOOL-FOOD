@@ -1,7 +1,8 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState, type ComponentType } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { LucideIcon } from "lucide-react";
 import {
   LayoutDashboard, MapPinned, Store, Bike, Wallet, ShieldCheck, ShoppingBag, Settings,
   Users, LogOut, RefreshCw, Search, Check, X, Save, Ban, FileText, Download,
@@ -40,7 +41,8 @@ export default function AdminPage(){
    db.from("cities").select("id,name_en,name_ar,is_active,city_settings(base_delivery_fee_sar,price_per_km_sar,minimum_order_sar,platform_commission_pct,cod_cap_sar)").order("name_en"),
    db.from("orders").select("id,order_number,status,total_sar,created_at,store_id").order("created_at",{ascending:false}).limit(300),
    db.from("courier_ledger_entries").select("id,courier_id,entry_type,debit_sar,credit_sar,description,reference,created_at").order("created_at",{ascending:false}).limit(1000),
-   db.rpc("admin_get_dashboard_metrics")
+   db.rpc("admin_get_dashboard_metrics"),
+   db.from("merchant_document_reviews").select("id,store_id,document_type,review_status,review_note").limit(1000)
   ]);
   const e=p.error||s.error||c.error||o.error||l.error||m.error||d.error;
   if(e)setError(e.message);
@@ -83,7 +85,7 @@ export default function AdminPage(){
  if(!isSuper&&!permissions.length)return <main className="adminLoading"><section><h1>لا تملك صلاحية الدخول</h1><p>هذه الصفحة مخصصة لفريق إدارة ZOOL FOOD.</p><Link href="/account">العودة للحساب</Link></section></main>;
  const allowed=(key:string)=>key==="overview"?(can("orders.view")||can("merchants.view")||can("couriers.view")):key==="cities"?can("cities.view"):key==="merchants"?can("merchants.view"):key==="couriers"?can("couriers.view"):key==="finance"?can("finance.view"):key==="staff"?isSuper:key==="orders"?can("orders.view"):isSuper;
  const activeNav=NAV.filter(n=>allowed(n[0]));
- const metricCards: {label:string;value:string|number;Icon:ComponentType<{size?:number}>}[] = [{label:"إجمالي المستخدمين",value:metric.users||profiles.length,Icon:Users},{label:"المتاجر المسجلة",value:metric.stores||stores.length,Icon:Store},{label:"إجمالي الطلبات",value:metric.orders||orders.length,Icon:ShoppingBag},{label:"طلبات التجار المعلقة",value:metric.pending_merchants??pendingMerchants.length,Icon:Clock3},{label:"طلبات المندوبين المعلقة",value:metric.pending_couriers??pendingCouriers.length,Icon:Bike},{label:"مندوبون نشطون",value:metric.active_couriers||profiles.filter(p=>p.role==="courier"&&p.is_active).length,Icon:Activity},{label:"إيرادات الطلبات المكتملة",value:money(metric.revenue_sar||0),Icon:CircleDollarSign}];
+ const metricCards: {label:string;value:string|number;Icon:LucideIcon}[] = [{label:"إجمالي المستخدمين",value:metric.users||profiles.length,Icon:Users},{label:"المتاجر المسجلة",value:metric.stores||stores.length,Icon:Store},{label:"إجمالي الطلبات",value:metric.orders||orders.length,Icon:ShoppingBag},{label:"طلبات التجار المعلقة",value:metric.pending_merchants??pendingMerchants.length,Icon:Clock3},{label:"طلبات المندوبين المعلقة",value:metric.pending_couriers??pendingCouriers.length,Icon:Bike},{label:"مندوبون نشطون",value:metric.active_couriers||profiles.filter(p=>p.role==="courier"&&p.is_active).length,Icon:Activity},{label:"إيرادات الطلبات المكتملة",value:money(metric.revenue_sar||0),Icon:CircleDollarSign}];
  const title=NAV.find(n=>n[0]===section)?.[1]||"مركز التحكم";
  return <main className="adminShell">
   <aside className={"adminSidebar "+(mobileNav?"open":"")}><div className="adminBrand"><span className="brandMark">Z</span><div><b>ZOOL FOOD</b><small>SUPER ADMIN CENTER</small></div><button className="navClose" onClick={()=>setMobileNav(false)}><X size={18}/></button></div>

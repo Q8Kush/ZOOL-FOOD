@@ -1,5 +1,8 @@
 name: Deploy ZOOL FOOD to Vercel
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
   schedule:
     - cron: "50 23 * * *"
@@ -83,10 +86,11 @@ jobs:
           fi
           echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
           echo "Production deployment: $DEPLOY_URL"
+          vercel --token "$VERCEL_TOKEN" --scope mujahid25 alias set "$DEPLOY_URL" zool-food-8qqb.vercel.app
       - name: Verify deployed endpoint responds
         if: steps.deployment_check.outputs.already_deployed != 'true'
         env:
-          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
+          DEPLOY_URL: https://zool-food-8qqb.vercel.app
         run: |
           set -euo pipefail
           for attempt in $(seq 1 12); do

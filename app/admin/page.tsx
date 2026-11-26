@@ -44,7 +44,9 @@ export default function AdminPage(){
    db.from("orders").select("id,order_number,status,total_sar,created_at,store_id").order("created_at",{ascending:false}).limit(300),
    db.from("courier_ledger_entries").select("id,courier_id,entry_type,debit_sar,credit_sar,description,reference,created_at").order("created_at",{ascending:false}).limit(1000),
    db.rpc("admin_get_dashboard_metrics"),
-   db.from("merchant_document_reviews").select("id,store_id,document_type,review_status,review_note").limit(1000)
+   db.from("merchant_document_reviews").select("id,store_id,document_type,review_status,review_note").limit(1000),
+   db.from("admin_staff").select("user_id,display_name,is_active,assigned_city_ids").order("created_at",{ascending:false}),
+   db.from("courier_settlements").select("id,courier_id,amount_sar,method,reference,receipt_number,settled_by,created_at").order("created_at",{ascending:false}).limit(100)
   ]);
   const e=p.error||s.error||c.error||o.error||l.error||m.error||d.error||st.error||sett.error;
   if(e)setError(e.message);
@@ -78,7 +80,8 @@ export default function AdminPage(){
  async function saveCity(){if(!selectedCity)return;await rpc("admin_save_city_settings",{p_city_id:selectedCity.id,p_base_fee:cityForm.base,p_per_km:cityForm.km,p_minimum:cityForm.min,p_commission:cityForm.commission,p_cod_cap:cityForm.cod},"تم حفظ إعدادات المدينة");setSelectedCity(null);}
  async function setDocumentReview(storeId:string,documentType:string,storagePath:string,status:"verified"|"invalid"){if(!db||!user)return;setBusy(true);setError("");const {error:e}=await db.from("merchant_document_reviews").upsert({store_id:storeId,document_type:documentType,storage_path:storagePath,review_status:status,reviewed_by:user.id,reviewed_at:new Date().toISOString()}, {onConflict:"store_id,document_type"});setBusy(false);if(e)setError(e.message);else{setNotice("تم تحديث حالة الوثيقة");await load();}}
  async function settle(){if(!selectedCourier)return;await rpc("admin_settle_courier",{p_courier_id:selectedCourier.id,p_amount:Number(settleAmount),p_method:settleMethod,p_reference:settleRef},"تم تسجيل التسوية وإصدار إيصالها");setSelectedCourier(null);setSettleAmount("");setSettleRef("");}
- async function addStaff(){if(!db)return;await rpc("admin_add_staff",{p_user_id:staffId,p_display_name:staffName,p_city_ids:staffCities,p_permissions:staffPermissions},"تم حفظ الموظف وصلاحياته");setStaffId("");setStaffName("");setStaffCities([]);setStaffPermissions([]);}\n async function setStaffActive(id:string,active:boolean){await rpc("admin_set_staff_active",{p_user_id:id,p_active:active},active?"تم تفعيل الموظف":"تم إيقاف الموظف");}
+ async function addStaff(){if(!db)return;await rpc("admin_add_staff",{p_user_id:staffId,p_display_name:staffName,p_city_ids:staffCities,p_permissions:staffPermissions},"تم حفظ الموظف وصلاحياته");setStaffId("");setStaffName("");setStaffCities([]);setStaffPermissions([]);}
+ async function setStaffActive(id:string,active:boolean){await rpc("admin_set_staff_active",{p_user_id:id,p_active:active},active?"تم تفعيل الموظف":"تم إيقاف الموظف");}
  async function signOut(){await db?.auth.signOut();setUser(null);setPermissions([]);}
  const cityStats=(c:City)=>({stores:stores.filter(s=>s.city===c.name_en||s.city===c.name_ar).filter(s=>s.is_approved).length,couriers:profiles.filter(p=>p.city_id===c.id&&p.role==="courier"&&p.is_active).length,orders:orders.filter(o=>stores.some(s=>s.id===o.store_id&&(s.city===c.name_en||s.city===c.name_ar))).length});
  const balance=(id:string)=>ledger.filter(x=>x.courier_id===id).reduce((a,x)=>a+Number(x.debit_sar)-Number(x.credit_sar),0);

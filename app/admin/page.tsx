@@ -68,6 +68,7 @@ export default function AdminPage(){
   setLoading(false);
  },[db,load]);
  useEffect(()=>{if(!db){setError("إعدادات الاتصال بالخدمة غير مكتملة.");setLoading(false);return;}db.auth.getUser().then(({data})=>{if(data.user)void check({id:data.user.id,email:data.user.email});else setLoading(false)});const {data:{subscription}}=db.auth.onAuthStateChange((_e,session)=>{if(session?.user)void check({id:session.user.id,email:session.user.email});else{setUser(null);setPermissions([]);setIsSuper(false);setLoading(false)}});return()=>subscription.unsubscribe()},[db,check]);
+ useEffect(()=>{if(!db||!user||!can("orders.view"))return;const channel=db.channel("admin-live-orders").on("postgres_changes",{event:"*",schema:"public",table:"orders"},()=>{void load()}).subscribe();return()=>{void db.removeChannel(channel)}},[db,user,permissions,isSuper,load]);
  const pendingMerchants=stores.filter(x=>x.approval_status==="pending"),pendingCouriers=profiles.filter(x=>x.role==="courier"&&x.approval_status==="pending");
  const visibleStores=useMemo(()=>stores.filter(x=>(x.name+" "+x.city+" "+x.vertical).toLowerCase().includes(search.toLowerCase())&&(merchantFilter==="all"||x.approval_status===merchantFilter)&&(merchantVertical==="all"||x.vertical===merchantVertical)),[stores,search,merchantFilter,merchantVertical]);
  const visibleCouriers=useMemo(()=>profiles.filter(x=>x.role==="courier"&&((x.full_name||"").toLowerCase().includes(search.toLowerCase())||(x.phone||"").includes(search))&&(courierFilter==="all"||x.approval_status===courierFilter)),[profiles,search,courierFilter]);
